@@ -2,9 +2,12 @@
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
 const User = require('../models/User');
 
-// Register a new user
+// Load environment variables
+dotenv.config();
+
 exports.register = async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -15,15 +18,14 @@ exports.register = async (req, res) => {
       return res.status(400).json({ msg: 'User already exists' });
     }
 
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     user = await User.create({
       username,
       email,
-      password,
+      password: hashedPassword,
     });
-
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(password, salt);
-    await user.save();
 
     const payload = {
       user: {
@@ -34,7 +36,7 @@ exports.register = async (req, res) => {
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
-      { expiresIn: 360000 },
+      { expiresIn: '1h' },
       (err, token) => {
         if (err) throw err;
         res.json({ token });
@@ -46,7 +48,6 @@ exports.register = async (req, res) => {
   }
 };
 
-// Authenticate user and get token
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -72,7 +73,7 @@ exports.login = async (req, res) => {
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
-      { expiresIn: 360000 },
+      { expiresIn: '1h' },
       (err, token) => {
         if (err) throw err;
         res.json({ token });

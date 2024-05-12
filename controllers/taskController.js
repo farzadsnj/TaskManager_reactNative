@@ -1,6 +1,6 @@
 // controllers/taskController.js
 
-const { Task } = require('../models/Task');
+const Task = require('../models/Task'); // Correct import path for Task model
 
 // Get all tasks
 exports.getTasks = async (req, res) => {
