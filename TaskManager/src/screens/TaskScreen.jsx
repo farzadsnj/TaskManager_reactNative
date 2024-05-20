@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, FlatList } from 'react-native';
+import { View, Text, Button, FlatList, StyleSheet } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import { useFontSize } from '../contexts/FontSizeContext';
 import { getTasks } from '../services/api';
@@ -8,12 +8,12 @@ const TaskScreen = ({ route, navigation }) => {
   const tailwind = useTailwind();
   const { fontSize } = useFontSize();
   const [tasks, setTasks] = useState([]);
-  const { token } = route.params;
+  const { token } = route.params; // This token could be a dummy token for testing
 
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const data = await getTasks(token);
+        const data = await getTasks(token); // Adjust the API to handle the dummy token if necessary
         setTasks(data);
       } catch (error) {
         console.error(error);

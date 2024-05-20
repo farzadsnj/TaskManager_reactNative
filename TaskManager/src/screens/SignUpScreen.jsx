@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, Button, Alert, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { registerUser } from '../services/api';
 
 const SignUpScreen = ({ navigation }) => {
@@ -8,9 +8,17 @@ const SignUpScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
 
   const handleSignUp = async () => {
+    if (!username || !email || !password) {
+      Alert.alert('Error', 'All fields are required!');
+      return;
+    }
+
     try {
       const data = await registerUser(username, email, password);
       Alert.alert('Success', 'User registered successfully');
+      setUsername('');
+      setEmail('');
+      setPassword('');
       navigation.navigate('Login');
     } catch (error) {
       console.error(error);
@@ -19,41 +27,53 @@ const SignUpScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sign Up</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        secureTextEntry
-        onChangeText={setPassword}
-      />
-      <Button title="Sign Up" onPress={handleSignUp} />
-      <Button
-        title="Go to Login"
-        onPress={() => navigation.navigate('Login')}
-      />
-    </View>
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
+      <ScrollView contentContainerStyle={styles.contentContainer}>
+        <Text style={styles.title}>Sign Up</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Username"
+          value={username}
+          onChangeText={setUsername}
+          autoCapitalize="none"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          value={password}
+          secureTextEntry
+          onChangeText={setPassword}
+          autoCapitalize="none"
+        />
+        <Button title="Sign Up" onPress={handleSignUp} />
+        <View style={styles.loginButton}>
+          <Button
+            title="Already have an account? Login"
+            onPress={() => navigation.navigate('Login')}
+            color="#1DA1F2"
+          />
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+  },
+  contentContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
+    padding: 20,
   },
   title: {
     fontSize: 24,
@@ -61,11 +81,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   input: {
-    height: 40,
+    height: 50,
     borderColor: 'gray',
     borderWidth: 1,
     marginBottom: 20,
-    padding: 10,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+  loginButton: {
+    marginTop: 10,
   },
 });
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, Button, Alert, StyleSheet, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { useFontSize } from '../contexts/FontSizeContext';
 import { loginUser } from '../services/api';
 
@@ -9,9 +9,13 @@ const LoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password!');
+      return;
+    }
+
     try {
       const data = await loginUser(email, password);
-      // Store token securely
       Alert.alert('Success', 'Logged in successfully');
       navigation.navigate('Tasks', { token: data.token });
     } catch (error) {
@@ -20,44 +24,56 @@ const LoginScreen = ({ navigation }) => {
     }
   };
 
+  const handleDirectAccess = () => {
+    navigation.navigate('Tasks', { token: 'dummy-token' });
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={[styles.title, { fontSize: parseInt(fontSize) }]}>Login</Text>
-      <TextInput
-        style={[styles.input, { fontSize: parseInt(fontSize) }]}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={[styles.input, { fontSize: parseInt(fontSize) }]}
-        placeholder="Password"
-        value={password}
-        secureTextEntry
-        onChangeText={setPassword}
-      />
-      <Button title="Login" onPress={handleLogin} />
-      <Button
-        title="Go to Sign Up"
-        onPress={() => navigation.navigate('SignUp')}
-      />
-      <Button
-        title="About"
-        onPress={() => navigation.navigate('About')}
-      />
-      <Button
-        title="Settings"
-        onPress={() => navigation.navigate('Settings')}
-      />
-    </View>
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
+      <ScrollView contentContainerStyle={styles.contentContainer}>
+        <Text style={[styles.title, { fontSize: parseInt(fontSize) }]}>Login</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          value={password}
+          secureTextEntry
+          onChangeText={setPassword}
+          autoCapitalize="none"
+        />
+        <Button title="Login" onPress={handleLogin} />
+        <View style={styles.buttonSpacing}>
+          <Button
+            title="Go to Sign Up"
+            onPress={() => navigation.navigate('SignUp')}
+            color="#1DA1F2"
+          />
+          <Button
+            title="Direct Access to Tasks"
+            onPress={handleDirectAccess}
+            color="red"
+          />
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+  },
+  contentContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
+    padding: 20,
   },
   title: {
     fontSize: 24,
@@ -65,11 +81,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   input: {
-    height: 40,
+    height: 50,
     borderColor: 'gray',
     borderWidth: 1,
     marginBottom: 20,
-    padding: 10,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+  buttonSpacing: {
+    marginTop: 10,
   },
 });
 
