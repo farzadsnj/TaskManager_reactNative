@@ -1,24 +1,24 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const dotenv = require('dotenv');
 const { Sequelize } = require('sequelize');
-const helmet = require('helmet');
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 // Set up Sequelize connection
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
     host: process.env.DB_HOST,
     dialect: 'mysql',
-    logging: false // Toggle based on your environment preference
+    port: 3306, // Default MySQL port, adjust if your server runs on a different port
+    logging: console.log, // Enable logging for development
 });
 
-// Import models
-const UserModel = require('./models/User');
-const User = UserModel(sequelize);
+// Import User model
+const User = require('./models/User')(sequelize);
 
 // Middlewares
 app.use(cors());
@@ -41,11 +41,10 @@ sequelize.authenticate()
 
 // Define routes
 app.get('/', (req, res) => res.send('Welcome to the Task Manager API'));
-
-// Include more routes as needed
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 
+// Start the server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

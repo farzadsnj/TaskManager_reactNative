@@ -17,39 +17,34 @@ exports.register = async (req, res) => {
   try {
       // Check if user already exists
       let user = await User.findOne({ where: { email } });
-
       if (user) {
           return res.status(400).json({ msg: 'User already exists' });
       }
 
-      // Hash password and create new user
+      // Hash password
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
 
+      // Create user
       user = await User.create({
           username,
           email,
-          password: hashedPassword,
+          password: hashedPassword
       });
 
-      const payload = {
-          user: {
-              id: user.id,
-          },
-      };
-
-      // Sign token and return
+      // Create token
+      const payload = { user: { id: user.id } };
       jwt.sign(
           payload,
           process.env.JWT_SECRET,
-          { expiresIn: '1h' },
+          { expiresIn: 3600 }, // 1 hour
           (err, token) => {
               if (err) throw err;
               res.json({ token });
           }
       );
   } catch (err) {
-      console.error(err.message);
+      console.error('Server Error:', err.message);
       res.status(500).send('Server error');
   }
 };
