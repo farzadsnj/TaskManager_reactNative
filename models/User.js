@@ -4,7 +4,6 @@ module.exports = (sequelize) => {
     class User extends Model {}
 
     User.init({
-        // Define model attributes
         username: {
             type: DataTypes.STRING,
             allowNull: false
@@ -19,9 +18,10 @@ module.exports = (sequelize) => {
             allowNull: false
         }
     }, {
-        sequelize, // Pass the connection instance
-        modelName: 'User', // Define the model name
-        tableName: 'users' // Define the table name if different from the model name
+        sequelize,
+        modelName: 'User',
+        tableName: 'users',
+        timestamps: false // Disable timestamps
     });
 
     return User;
