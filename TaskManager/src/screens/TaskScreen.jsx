@@ -93,7 +93,7 @@ const TaskManager = ({ route, navigation }) => {
 
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || dueDate;
-    setShowDatePicker(false);
+    setShowDatePicker(Platform.OS === 'ios');
     setDueDate(currentDate);
   };
 
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     position: 'absolute',
-    bottom: 0,
+    bottom: 500,
     left: 0,
     right: 0,
     flexDirection: 'row',

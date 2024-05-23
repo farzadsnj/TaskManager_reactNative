@@ -4,6 +4,11 @@ module.exports = (sequelize) => {
     class User extends Model {}
 
     User.init({
+        id: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true,
+        },
         username: {
             type: DataTypes.STRING,
             allowNull: false
@@ -20,8 +25,7 @@ module.exports = (sequelize) => {
     }, {
         sequelize,
         modelName: 'User',
-        tableName: 'users',
-        timestamps: false // Disable timestamps
+        tableName: 'users'
     });
 
     return User;

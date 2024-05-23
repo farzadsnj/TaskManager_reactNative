@@ -17,8 +17,9 @@ const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, proces
     logging: console.log, // Enable logging for development
 });
 
-// Import User model
+// Import models
 const User = require('./models/User')(sequelize);
+const Task = require('./models/Task')(sequelize);
 
 // Middlewares
 app.use(cors());
@@ -43,6 +44,9 @@ sequelize.authenticate()
 app.get('/', (req, res) => res.send('Welcome to the Task Manager API'));
 const authRoutes = require('./routes/auth')(User);
 app.use('/api/auth', authRoutes);
+
+const taskRoutes = require('./routes/tasks');
+app.use('/api/tasks', taskRoutes);
 
 // Start the server
 app.listen(PORT, () => {

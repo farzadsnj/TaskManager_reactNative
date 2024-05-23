@@ -1,3 +1,5 @@
+// src/services/api.js
+
 import axios from 'axios';
 import { Platform } from 'react-native';
 
@@ -45,6 +47,19 @@ export const getTasks = async (token) => {
   }
 };
 
+export const createTask = async (task, token) => {
+  try {
+    const response = await api.post('/tasks', task, {
+      headers: {
+        'x-auth-token': token,
+      },
+    });
+    return handleResponse(response);
+  } catch (error) {
+    handleError(error);
+  }
+};
+
 export const updateTask = async (id, task, token) => {
   try {
     const response = await api.put(`/tasks/${id}`, task, {
@@ -65,6 +80,15 @@ export const deleteTask = async (id, token) => {
         'x-auth-token': token,
       },
     });
+    return handleResponse(response);
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+export const loginUser = async (email, password) => {
+  try {
+    const response = await api.post('/auth/login', { email, password });
     return handleResponse(response);
   } catch (error) {
     handleError(error);

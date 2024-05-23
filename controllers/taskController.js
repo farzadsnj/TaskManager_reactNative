@@ -1,5 +1,3 @@
-// controllers/taskController.js
-
 const Task = require('../models/Task');
 
 exports.getTasks = async (req, res) => {
