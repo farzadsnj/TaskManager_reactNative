@@ -2,7 +2,7 @@ const Task = require('../models/Task');
 
 exports.getTasks = async (req, res) => {
     try {
-        const tasks = await Task.findAll({ where: { userId: req.user.id } });
+        const tasks = await Task.findAll({ where: { userId: req.user.user.id } });
         res.json(tasks);
     } catch (err) {
         console.error(err.message);
@@ -18,7 +18,7 @@ exports.createTask = async (req, res) => {
             title,
             description,
             dueDate,
-            userId: req.user.id,
+            userId: req.user.user.id,
         });
 
         res.json(newTask);
@@ -38,7 +38,7 @@ exports.updateTask = async (req, res) => {
             return res.status(404).json({ msg: 'Task not found' });
         }
 
-        if (task.userId !== req.user.id) {
+        if (task.userId !== req.user.user.id) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
@@ -63,7 +63,7 @@ exports.deleteTask = async (req, res) => {
             return res.status(404).json({ msg: 'Task not found' });
         }
 
-        if (task.userId !== req.user.id) {
+        if (task.userId !== req.user.user.id) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 

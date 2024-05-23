@@ -1,36 +1,26 @@
-const { DataTypes } = require('sequelize');
+// models/Task.js
 
-module.exports = (sequelize) => {
-    const User = require('./User')(sequelize);
-
+module.exports = (sequelize, DataTypes) => {
     const Task = sequelize.define('Task', {
-        id: {
-            type: DataTypes.INTEGER,
-            autoIncrement: true,
-            primaryKey: true,
-        },
         title: {
             type: DataTypes.STRING,
             allowNull: false,
         },
         description: {
             type: DataTypes.STRING,
-            allowNull: true,
         },
         dueDate: {
             type: DataTypes.DATE,
-            allowNull: true,
         },
         userId: {
             type: DataTypes.INTEGER,
-            references: {
-                model: User,
-                key: 'id',
-            },
+            allowNull: false,
         },
     });
 
-    Task.belongsTo(User, { foreignKey: 'userId' });
+    Task.associate = (models) => {
+        Task.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
+    };
 
     return Task;
 };

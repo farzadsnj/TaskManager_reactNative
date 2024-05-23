@@ -1,5 +1,3 @@
-// src/services/api.js
-
 import axios from 'axios';
 import { Platform } from 'react-native';
 
@@ -23,9 +21,15 @@ const handleResponse = (response) => {
 
 const handleError = (error) => {
   if (error.response) {
-    console.error('Backend returned status code:', error.response.status);
-    console.error('Response data:', error.response.data);
-    console.error('Response headers:', error.response.headers);
+    if (error.response.status === 401) {
+      // Handle unauthorized errors specifically
+      console.error('Token is not valid');
+      throw new Error('Token is not valid');
+    } else {
+      console.error('Backend returned status code:', error.response.status);
+      console.error('Response data:', error.response.data);
+      console.error('Response headers:', error.response.headers);
+    }
   } else if (error.request) {
     console.error('No response received:', error.request);
   } else {
@@ -89,6 +93,15 @@ export const deleteTask = async (id, token) => {
 export const loginUser = async (email, password) => {
   try {
     const response = await api.post('/auth/login', { email, password });
+    return handleResponse(response);
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+export const registerUser = async (username, email, password) => {
+  try {
+    const response = await api.post('/auth/register', { username, email, password });
     return handleResponse(response);
   } catch (error) {
     handleError(error);
