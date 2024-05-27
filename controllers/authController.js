@@ -31,8 +31,8 @@ module.exports = (User) => {
                 const token = generateToken(user.id);
                 res.json({ token });
             } catch (err) {
-                console.error('Server Error:', err);
-                res.status(500).json({ msg: 'Server error', error: err.message });
+                console.error('Server Error:', err.message);
+                res.status(500).send('Server error');
             }
         },
 

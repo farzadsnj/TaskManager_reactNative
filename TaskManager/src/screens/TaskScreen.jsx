@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, Alert, Platform, Image } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTailwind } from 'tailwind-rn';
 import { useFontSize } from '../contexts/FontSizeContext';
 import { getTasks, createTask, updateTask, deleteTask } from '../services/api';
 import { Picker } from '@react-native-picker/picker';
 
-const TaskManager = ({ route, navigation }) => {
+const TaskScreen = ({ route, navigation }) => {
   const tailwind = useTailwind();
   const { fontSize } = useFontSize();
   const [tasks, setTasks] = useState([]);
@@ -55,7 +55,7 @@ const TaskManager = ({ route, navigation }) => {
     setTitle(task.title);
     setDescription(task.description);
     setDueDate(new Date(task.dueDate));
-    setTime(task.dueDate.split(' ')[1]);
+    setTime(task.dueDate.split('T')[1].substring(0, 5));
   };
 
   const handleUpdateTask = async () => {
@@ -168,10 +168,13 @@ const TaskManager = ({ route, navigation }) => {
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.taskItem}>
-            <View>
-              <Text style={{ fontSize: parseInt(fontSize) }}>{item.title}</Text>
-              <Text style={{ fontSize: parseInt(fontSize) }}>{item.description}</Text>
-              <Text style={{ fontSize: parseInt(fontSize) }}>{item.dueDate}</Text>
+            <View style={styles.taskContent}>
+              <Text style={[styles.taskTitle, { fontSize: 24 }]}>{item.title}</Text>
+              <Text style={[styles.taskDescription, { fontSize: 16 }]}>{item.description}</Text>
+              <Text style={[styles.taskLabel, { fontSize: 16 }]}>Date:</Text>
+              <Text style={[styles.taskDueDate, { fontSize: 16 }]}>{item.dueDate.split('T')[0]}</Text>
+              <Text style={[styles.taskLabel, { fontSize: 16 }]}>Time:</Text>
+              <Text style={[styles.taskDueTime, { fontSize: 16 }]}>{item.dueDate.split('T')[1].substring(0, 5)}</Text>
             </View>
             <View style={styles.taskActions}>
               <TouchableOpacity onPress={() => handleCompleteTask(item.id)} style={[styles.taskButton, styles.doneButton]}>
@@ -186,13 +189,16 @@ const TaskManager = ({ route, navigation }) => {
             </View>
           </View>
         )}
+        contentContainerStyle={{ paddingBottom: 100 }}
       />
       <View style={styles.footer}>
-        <TouchableOpacity onPress={() => navigation.navigate('About')} style={styles.footerButton}>
-          <Text style={styles.footerButtonText}>About</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.footerButton}>
+          <Image source={require('../../assets/images/favicon.png')} style={styles.footerIcon} />
+          <Text style={styles.footerButtonText}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={styles.footerButton}>
-          <Text style={styles.footerButtonText}>Settings</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Explore')} style={styles.footerButton}>
+          <Image source={require('../../assets/images/favicon.png')} style={styles.footerIcon} />
+          <Text style={styles.footerButtonText}>Explore</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -233,6 +239,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 4,
     alignItems: 'center',
+    marginTop: 10,
   },
   buttonText: {
     color: 'white',
@@ -243,17 +250,42 @@ const styles = StyleSheet.create({
     padding: 10,
     marginVertical: 8,
     borderRadius: 4,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  },
+  taskContent: {
+    marginBottom: 10,
+  },
+  taskTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  taskDescription: {
+    fontSize: 16,
+    color: '#555',
+    marginBottom: 8,
+  },
+  taskLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  taskDueDate: {
+    fontSize: 16,
+    color: '#555',
+    marginBottom: 5,
+  },
+  taskDueTime: {
+    fontSize: 16,
+    color: '#555',
   },
   taskActions: {
     flexDirection: 'row',
+    justifyContent: 'center',
   },
   taskButton: {
-    marginLeft: 10,
-    padding: 5,
+    flex: 1,
+    marginHorizontal: 5,
+    padding: 10,
     borderRadius: 4,
+    alignItems: 'center',
   },
   doneButton: {
     backgroundColor: '#28A745',
@@ -266,7 +298,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     position: 'absolute',
-    bottom: 500,
+    bottom: 0,
     left: 0,
     right: 0,
     flexDirection: 'row',
@@ -278,11 +310,16 @@ const styles = StyleSheet.create({
   },
   footerButton: {
     padding: 10,
+    alignItems: 'center',
   },
   footerButtonText: {
     color: '#007BFF',
     fontWeight: 'bold',
   },
+  footerIcon: {
+    width: 24,
+    height: 24,
+  },
 });
 
-export default TaskManager;
+export default TaskScreen;

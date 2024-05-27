@@ -33,6 +33,7 @@ const handleError = (error) => {
 };
 
 export const getTasks = async (token) => {
+  console.log('Sending token:', token); // Log the token
   try {
     const response = await api.get('/tasks', {
       headers: {
@@ -46,6 +47,7 @@ export const getTasks = async (token) => {
 };
 
 export const createTask = async (task, token) => {
+  console.log('Sending token:', token); // Log the token
   try {
     const response = await api.post('/tasks', task, {
       headers: {
@@ -59,6 +61,7 @@ export const createTask = async (task, token) => {
 };
 
 export const updateTask = async (id, task, token) => {
+  console.log('Sending token:', token); // Log the token
   try {
     const response = await api.put(`/tasks/${id}`, task, {
       headers: {
@@ -72,6 +75,7 @@ export const updateTask = async (id, task, token) => {
 };
 
 export const deleteTask = async (id, token) => {
+  console.log('Sending token:', token); // Log the token
   try {
     const response = await api.delete(`/tasks/${id}`, {
       headers: {
