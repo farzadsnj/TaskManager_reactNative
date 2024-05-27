@@ -2,23 +2,12 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const dotenv = require('dotenv');
-const { Sequelize } = require('sequelize');
+const { sequelize, User, Task } = require('./models'); // Ensure correct import
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
-    host: process.env.DB_HOST,
-    dialect: 'mysql',
-    port: process.env.DB_PORT || 3306,
-    logging: console.log,
-});
-
-// Import models
-const User = require('./models/User')(sequelize, Sequelize.DataTypes);
-const Task = require('./models/Task')(sequelize, Sequelize.DataTypes);
 
 // Middlewares
 app.use(cors());
@@ -44,7 +33,7 @@ const authRoutes = require('./routes/auth')(User);
 app.use('/api/auth', authRoutes);
 
 const taskRoutes = require('./routes/tasks');
-app.use('/api/tasks', require('./middleware/auth'), taskRoutes);
+app.use('/api/tasks', taskRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

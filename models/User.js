@@ -1,8 +1,13 @@
-// models/User.js
+const { DataTypes } = require('sequelize');
 
-module.exports = (sequelize, DataTypes) => {
+module.exports = (sequelize) => {
     const User = sequelize.define('User', {
-        name: {
+        id: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true,
+        },
+        username: {
             type: DataTypes.STRING,
             allowNull: false,
         },
@@ -17,8 +22,8 @@ module.exports = (sequelize, DataTypes) => {
         },
     });
 
-    User.associate = (models) => {
-        User.hasMany(models.Task, { foreignKey: 'userId', as: 'tasks' });
+    User.associate = function(models) {
+        User.hasMany(models.Task, { foreignKey: 'userId' });
     };
 
     return User;

@@ -21,15 +21,9 @@ const handleResponse = (response) => {
 
 const handleError = (error) => {
   if (error.response) {
-    if (error.response.status === 401) {
-      // Handle unauthorized errors specifically
-      console.error('Token is not valid');
-      throw new Error('Token is not valid');
-    } else {
-      console.error('Backend returned status code:', error.response.status);
-      console.error('Response data:', error.response.data);
-      console.error('Response headers:', error.response.headers);
-    }
+    console.error('Backend returned status code:', error.response.status);
+    console.error('Response data:', error.response.data);
+    console.error('Response headers:', error.response.headers);
   } else if (error.request) {
     console.error('No response received:', error.request);
   } else {

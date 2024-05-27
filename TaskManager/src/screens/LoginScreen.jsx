@@ -25,7 +25,8 @@ const LoginScreen = ({ navigation }) => {
   };
 
   const handleDirectAccess = () => {
-    navigation.navigate('Tasks', { token: 'dummy-token' });
+    // Replace 'your_valid_jwt' with the JWT you generated
+    navigation.navigate('Tasks', { token: 'your_valid_jwt' });
   };
 
   return (

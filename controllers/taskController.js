@@ -1,8 +1,8 @@
-const Task = require('../models/Task');
+const { Task } = require('../models'); // Adjust the path as necessary
 
 exports.getTasks = async (req, res) => {
     try {
-        const tasks = await Task.findAll({ where: { userId: req.user.user.id } });
+        const tasks = await Task.findAll({ where: { userId: req.user.id } });
         res.json(tasks);
     } catch (err) {
         console.error(err.message);
@@ -18,7 +18,7 @@ exports.createTask = async (req, res) => {
             title,
             description,
             dueDate,
-            userId: req.user.user.id,
+            userId: req.user.id,
         });
 
         res.json(newTask);
@@ -38,7 +38,7 @@ exports.updateTask = async (req, res) => {
             return res.status(404).json({ msg: 'Task not found' });
         }
 
-        if (task.userId !== req.user.user.id) {
+        if (task.userId !== req.user.id) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
@@ -63,7 +63,7 @@ exports.deleteTask = async (req, res) => {
             return res.status(404).json({ msg: 'Task not found' });
         }
 
-        if (task.userId !== req.user.user.id) {
+        if (task.userId !== req.user.id) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
