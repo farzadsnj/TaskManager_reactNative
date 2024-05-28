@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, Alert, Platform, Image } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Platform, FlatList } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTailwind } from 'tailwind-rn';
 import { useFontSize } from '../contexts/FontSizeContext';
 import { getTasks, createTask, updateTask, deleteTask } from '../services/api';
 import { Picker } from '@react-native-picker/picker';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 const TaskScreen = ({ route, navigation }) => {
   const tailwind = useTailwind();
@@ -16,6 +17,7 @@ const TaskScreen = ({ route, navigation }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [time, setTime] = useState('00:00');
   const [editTaskId, setEditTaskId] = useState(null);
+  const [showTaskForm, setShowTaskForm] = useState(false);
   const { token } = route.params;
 
   useEffect(() => {
@@ -29,7 +31,7 @@ const TaskScreen = ({ route, navigation }) => {
     };
 
     fetchTasks();
-  }, []);
+  }, [token]);
 
   const handleCreateTask = async () => {
     if (!title || !description || !dueDate || !time) {
@@ -55,7 +57,8 @@ const TaskScreen = ({ route, navigation }) => {
     setTitle(task.title);
     setDescription(task.description);
     setDueDate(new Date(task.dueDate));
-    setTime(task.dueDate.split('T')[1].substring(0, 5));
+    setTime(task.dueDate.split(' ')[1]);
+    setShowTaskForm(true);
   };
 
   const handleUpdateTask = async () => {
@@ -67,6 +70,7 @@ const TaskScreen = ({ route, navigation }) => {
       setDescription('');
       setDueDate(new Date());
       setTime('00:00');
+      setShowTaskForm(false);
       Alert.alert('Task updated successfully');
     } catch (error) {
       console.error(error);
@@ -116,6 +120,28 @@ const TaskScreen = ({ route, navigation }) => {
     );
   };
 
+  const renderTaskItem = ({ item }) => (
+    <View key={item.id} style={styles.taskItem}>
+      <View style={styles.taskContent}>
+        <Text style={[styles.taskTitle, { fontSize: parseInt(fontSize) }]}>{item.title}</Text>
+        <Text style={[styles.taskDescription, { fontSize: parseInt(fontSize) }]}>{item.description}</Text>
+        <Text style={[styles.taskLabel, { fontSize: parseInt(fontSize) }]}>Date: <Text style={styles.taskDueDate}>{item.dueDate.split('T')[0]}</Text></Text>
+        <Text style={[styles.taskLabel, { fontSize: parseInt(fontSize) }]}>Time: <Text style={styles.taskDueTime}>{item.dueDate.split(' ')[1]}</Text></Text>
+      </View>
+      <View style={styles.taskActions}>
+        <TouchableOpacity onPress={() => handleCompleteTask(item.id)} style={[styles.taskButton, styles.doneButton]}>
+          <Ionicons name="checkmark-circle-outline" size={20} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleDeleteTask(item.id)} style={[styles.taskButton, styles.deleteButton]}>
+          <Ionicons name="trash-outline" size={20} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleEditTask(item)} style={[styles.taskButton, styles.editButton]}>
+          <Ionicons name="pencil-outline" size={20} color="black" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   return (
     <View style={tailwind('flex-1 bg-gray-100')}>
       <View style={styles.header}>
@@ -123,84 +149,59 @@ const TaskScreen = ({ route, navigation }) => {
           Task Manager
         </Text>
       </View>
-      <View style={styles.formContainer}>
-        <TextInput
-          style={[styles.input, { fontSize: parseInt(fontSize) }]}
-          placeholder="Add title"
-          value={title}
-          onChangeText={setTitle}
-        />
-        <TextInput
-          style={[styles.input, { fontSize: parseInt(fontSize) }]}
-          placeholder="Add description"
-          value={description}
-          onChangeText={setDescription}
-        />
-        <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+      <TouchableOpacity onPress={() => setShowTaskForm(!showTaskForm)} style={styles.toggleButton}>
+        <Text style={styles.toggleButtonText}>{showTaskForm ? 'Hide Task Form' : 'Add Task'}</Text>
+      </TouchableOpacity>
+      {showTaskForm && (
+        <View style={styles.formContainer}>
+          <Text style={styles.formTitle}>{editTaskId ? 'Edit Task' : 'Add Task'}</Text>
           <TextInput
             style={[styles.input, { fontSize: parseInt(fontSize) }]}
-            placeholder="Due Date"
-            value={dueDate.toISOString().split('T')[0]}
-            editable={false}
+            placeholder="Add title"
+            value={title}
+            onChangeText={setTitle}
           />
-        </TouchableOpacity>
-        {showDatePicker && (
-          <DateTimePicker
-            value={dueDate}
-            mode="date"
-            display="default"
-            onChange={handleDateChange}
+          <TextInput
+            style={[styles.input, { fontSize: parseInt(fontSize) }]}
+            placeholder="Add description"
+            value={description}
+            onChangeText={setDescription}
           />
-        )}
-        {renderTimePicker()}
-        {editTaskId ? (
-          <TouchableOpacity onPress={handleUpdateTask} style={styles.saveButton}>
-            <Text style={styles.buttonText}>Update Task</Text>
+          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+            <TextInput
+              style={[styles.input, { fontSize: parseInt(fontSize) }]}
+              placeholder="Due Date"
+              value={dueDate.toISOString().split('T')[0]}
+              editable={false}
+            />
           </TouchableOpacity>
-        ) : (
-          <TouchableOpacity onPress={handleCreateTask} style={styles.saveButton}>
-            <Text style={styles.buttonText}>Save</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+          {showDatePicker && (
+            <DateTimePicker
+              value={dueDate}
+              mode="date"
+              display="default"
+              onChange={handleDateChange}
+            />
+          )}
+          {renderTimePicker()}
+          {editTaskId ? (
+            <TouchableOpacity onPress={handleUpdateTask} style={styles.saveButton}>
+              <Text style={styles.buttonText}>Update Task</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={handleCreateTask} style={styles.saveButton}>
+              <Text style={styles.buttonText}>Save</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
       <FlatList
         data={tasks}
+        renderItem={renderTaskItem}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.taskItem}>
-            <View style={styles.taskContent}>
-              <Text style={[styles.taskTitle, { fontSize: 24 }]}>{item.title}</Text>
-              <Text style={[styles.taskDescription, { fontSize: 16 }]}>{item.description}</Text>
-              <Text style={[styles.taskLabel, { fontSize: 16 }]}>Date:</Text>
-              <Text style={[styles.taskDueDate, { fontSize: 16 }]}>{item.dueDate.split('T')[0]}</Text>
-              <Text style={[styles.taskLabel, { fontSize: 16 }]}>Time:</Text>
-              <Text style={[styles.taskDueTime, { fontSize: 16 }]}>{item.dueDate.split('T')[1].substring(0, 5)}</Text>
-            </View>
-            <View style={styles.taskActions}>
-              <TouchableOpacity onPress={() => handleCompleteTask(item.id)} style={[styles.taskButton, styles.doneButton]}>
-                <Text style={styles.buttonText}>Done</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleDeleteTask(item.id)} style={[styles.taskButton, styles.deleteButton]}>
-                <Text style={styles.buttonText}>Delete</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleEditTask(item)} style={[styles.taskButton, styles.editButton]}>
-                <Text style={styles.buttonText}>Edit</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={styles.taskList}
+        ListEmptyComponent={<Text style={styles.noTasksText}>You have no tasks to do :)</Text>}
       />
-      <View style={styles.footer}>
-        <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.footerButton}>
-          <Image source={require('../../assets/images/favicon.png')} style={styles.footerIcon} />
-          <Text style={styles.footerButtonText}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Explore')} style={styles.footerButton}>
-          <Image source={require('../../assets/images/favicon.png')} style={styles.footerIcon} />
-          <Text style={styles.footerButtonText}>Explore</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 };
@@ -225,6 +226,11 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
+  formTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
   input: {
     height: 40,
     borderColor: 'gray',
@@ -239,7 +245,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 4,
     alignItems: 'center',
-    marginTop: 10,
   },
   buttonText: {
     color: 'white',
@@ -255,30 +260,28 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   taskTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
   },
   taskDescription: {
     fontSize: 16,
     color: '#555',
-    marginBottom: 8,
   },
   taskLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#555',
   },
   taskDueDate: {
-    fontSize: 16,
-    color: '#555',
-    marginBottom: 5,
+    fontSize: 14,
+    color: '#000',
   },
   taskDueTime: {
-    fontSize: 16,
-    color: '#555',
+    fontSize: 14,
+    color: '#000',
   },
   taskActions: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
   },
   taskButton: {
     flex: 1,
@@ -296,29 +299,26 @@ const styles = StyleSheet.create({
   editButton: {
     backgroundColor: '#FFC107',
   },
-  footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#f8f8f8',
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-  },
-  footerButton: {
+  toggleButton: {
+    backgroundColor: '#007BFF',
     padding: 10,
+    borderRadius: 4,
     alignItems: 'center',
+    margin: 10,
   },
-  footerButtonText: {
-    color: '#007BFF',
+  toggleButtonText: {
+    color: 'white',
     fontWeight: 'bold',
   },
-  footerIcon: {
-    width: 24,
-    height: 24,
+  taskList: {
+    padding: 15,
+    paddingBottom: 100,
+  },
+  noTasksText: {
+    textAlign: 'center',
+    fontSize: 18,
+    color: '#888',
+    marginTop: 20,
   },
 });
 

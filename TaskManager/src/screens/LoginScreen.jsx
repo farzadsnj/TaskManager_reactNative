@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+import { View, Text, TextInput, Button, Alert, StyleSheet, KeyboardAvoidingView, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { useFontSize } from '../contexts/FontSizeContext';
 import { loginUser } from '../services/api';
 
@@ -20,18 +20,18 @@ const LoginScreen = ({ navigation }) => {
       navigation.navigate('Tasks', { token: data.token });
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'Failed to login');
+      Alert.alert('Error', 'Invalid email or password');
+      setPassword('');
     }
-  };
-
-  const handleDirectAccess = () => {
-    // Replace 'your_valid_jwt' with the JWT you generated
-    navigation.navigate('Tasks', { token: 'your_valid_jwt' });
   };
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
       <ScrollView contentContainerStyle={styles.contentContainer}>
+        <Text style={[styles.welcomeTitle, { fontSize: parseInt(fontSize) }]}>Welcome to Task Manager</Text>
+        <Text style={[styles.description, { fontSize: parseInt(fontSize) * 0.8 }]}>
+          If you have an account, please sign in. If you don't have an account, sign up to get started.
+        </Text>
         <Text style={[styles.title, { fontSize: parseInt(fontSize) }]}>Login</Text>
         <TextInput
           style={styles.input}
@@ -49,17 +49,15 @@ const LoginScreen = ({ navigation }) => {
           onChangeText={setPassword}
           autoCapitalize="none"
         />
+        <TouchableOpacity onPress={() => navigation.navigate('ForgetPassword')}>
+          <Text style={styles.forgotPassword}>Forgot password?</Text>
+        </TouchableOpacity>
         <Button title="Login" onPress={handleLogin} />
         <View style={styles.buttonSpacing}>
           <Button
             title="Go to Sign Up"
             onPress={() => navigation.navigate('SignUp')}
             color="#1DA1F2"
-          />
-          <Button
-            title="Direct Access to Tasks"
-            onPress={handleDirectAccess}
-            color="red"
           />
         </View>
       </ScrollView>
@@ -76,6 +74,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
   },
+  welcomeTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  description: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#666',
+  },
   title: {
     fontSize: 24,
     marginBottom: 20,
@@ -88,6 +98,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 10,
     borderRadius: 5,
+  },
+  forgotPassword: {
+    color: '#1DA1F2',
+    textAlign: 'right',
+    marginBottom: 20,
   },
   buttonSpacing: {
     marginTop: 10,

@@ -33,7 +33,6 @@ const handleError = (error) => {
 };
 
 export const getTasks = async (token) => {
-  console.log('Sending token:', token); // Log the token
   try {
     const response = await api.get('/tasks', {
       headers: {
@@ -47,7 +46,6 @@ export const getTasks = async (token) => {
 };
 
 export const createTask = async (task, token) => {
-  console.log('Sending token:', token); // Log the token
   try {
     const response = await api.post('/tasks', task, {
       headers: {
@@ -61,7 +59,6 @@ export const createTask = async (task, token) => {
 };
 
 export const updateTask = async (id, task, token) => {
-  console.log('Sending token:', token); // Log the token
   try {
     const response = await api.put(`/tasks/${id}`, task, {
       headers: {
@@ -75,7 +72,6 @@ export const updateTask = async (id, task, token) => {
 };
 
 export const deleteTask = async (id, token) => {
-  console.log('Sending token:', token); // Log the token
   try {
     const response = await api.delete(`/tasks/${id}`, {
       headers: {
@@ -100,6 +96,24 @@ export const loginUser = async (email, password) => {
 export const registerUser = async (username, email, password) => {
   try {
     const response = await api.post('/auth/register', { username, email, password });
+    return handleResponse(response);
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+export const sendPasswordResetEmail = async (email) => {
+  try {
+    const response = await api.post('/auth/forgot-password', { email });
+    return handleResponse(response);
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+export const resetPassword = async (token, password) => {
+  try {
+    const response = await api.post('/auth/reset-password', { token, password });
     return handleResponse(response);
   } catch (error) {
     handleError(error);

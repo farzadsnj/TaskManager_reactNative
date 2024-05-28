@@ -3,6 +3,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const dotenv = require('dotenv');
 const { sequelize, User, Task } = require('./models'); // Ensure correct import
+const authRoutes = require('./routes/auth')(User);
+const taskRoutes = require('./routes/tasks');
 
 dotenv.config();
 
@@ -29,10 +31,7 @@ sequelize.authenticate()
 
 // Define routes
 app.get('/', (req, res) => res.send('Welcome to the Task Manager API'));
-const authRoutes = require('./routes/auth')(User);
 app.use('/api/auth', authRoutes);
-
-const taskRoutes = require('./routes/tasks');
 app.use('/api/tasks', taskRoutes);
 
 app.listen(PORT, () => {
