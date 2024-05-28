@@ -24,12 +24,14 @@ const handleError = (error) => {
     console.error('Backend returned status code:', error.response.status);
     console.error('Response data:', error.response.data);
     console.error('Response headers:', error.response.headers);
+    throw new Error(error.response.data.error || 'Server Error');
   } else if (error.request) {
     console.error('No response received:', error.request);
+    throw new Error('No response received from server');
   } else {
     console.error('Error', error.message);
+    throw new Error(error.message);
   }
-  throw error;
 };
 
 export const getTasks = async (token) => {

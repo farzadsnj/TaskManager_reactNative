@@ -1,17 +1,10 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const { User } = require('../models'); // Ensure the User model is imported here
+const { Op } = require('sequelize');
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
-
-exports.register = async (req, res, User) => {
+exports.register = async (req, res) => {
   const { username, email, password } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -22,7 +15,7 @@ exports.register = async (req, res, User) => {
   }
 };
 
-exports.login = async (req, res, User) => {
+exports.login = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ where: { email } });
@@ -48,23 +41,9 @@ exports.forgotPassword = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
     
-    const mailOptions = {
-      to: user.email,
-      from: process.env.EMAIL,
-      subject: 'Password Reset',
-      text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
-             Please click on the following link, or paste this into your browser to complete the process:\n\n
-             http://${req.headers.host}/reset-password/${token}\n\n
-             If you did not request this, please ignore this email and your password will remain unchanged.\n`
-    };
-
-    transporter.sendMail(mailOptions, (err) => {
-      if (err) {
-        return res.status(500).json({ error: 'Failed to send email' });
-      }
-      res.status(200).json({ message: 'Email sent successfully' });
-    });
+    res.status(200).json({ token });
   } catch (error) {
+    console.error('Error processing forgot password request:', error);
     res.status(500).json({ error: 'Failed to process request' });
   }
 };
@@ -87,6 +66,7 @@ exports.resetPassword = async (req, res) => {
     await user.save();
     res.status(200).json({ message: 'Password reset successful' });
   } catch (error) {
+    console.error('Error resetting password:', error);
     res.status(500).json({ error: 'Failed to reset password' });
   }
 };

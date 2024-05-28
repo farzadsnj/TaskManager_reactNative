@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Platform, FlatList } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Platform, ScrollView } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTailwind } from 'tailwind-rn';
 import { useFontSize } from '../contexts/FontSizeContext';
@@ -18,6 +18,7 @@ const TaskScreen = ({ route, navigation }) => {
   const [time, setTime] = useState('00:00');
   const [editTaskId, setEditTaskId] = useState(null);
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [errors, setErrors] = useState({});
   const { token } = route.params;
 
   useEffect(() => {
@@ -34,8 +35,15 @@ const TaskScreen = ({ route, navigation }) => {
   }, [token]);
 
   const handleCreateTask = async () => {
-    if (!title || !description || !dueDate || !time) {
-      Alert.alert('All fields are required');
+    let formErrors = {};
+
+    if (!title) formErrors.title = 'This field is required';
+    if (!description) formErrors.description = 'This field is required';
+    if (!dueDate) formErrors.dueDate = 'This field is required';
+    if (!time) formErrors.time = 'This field is required';
+
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
       return;
     }
 
@@ -46,6 +54,7 @@ const TaskScreen = ({ route, navigation }) => {
       setDescription('');
       setDueDate(new Date());
       setTime('00:00');
+      setErrors({});
       Alert.alert('Task created successfully');
     } catch (error) {
       console.error(error);
@@ -62,6 +71,18 @@ const TaskScreen = ({ route, navigation }) => {
   };
 
   const handleUpdateTask = async () => {
+    let formErrors = {};
+
+    if (!title) formErrors.title = 'This field is required';
+    if (!description) formErrors.description = 'This field is required';
+    if (!dueDate) formErrors.dueDate = 'This field is required';
+    if (!time) formErrors.time = 'This field is required';
+
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      return;
+    }
+
     try {
       await updateTask(editTaskId, { title, description, dueDate: `${dueDate.toISOString().split('T')[0]} ${time}` }, token);
       setTasks(tasks.map(task => (task.id === editTaskId ? { ...task, title, description, dueDate: `${dueDate.toISOString().split('T')[0]} ${time}` } : task)));
@@ -70,6 +91,7 @@ const TaskScreen = ({ route, navigation }) => {
       setDescription('');
       setDueDate(new Date());
       setTime('00:00');
+      setErrors({});
       setShowTaskForm(false);
       Alert.alert('Task updated successfully');
     } catch (error) {
@@ -121,7 +143,7 @@ const TaskScreen = ({ route, navigation }) => {
   };
 
   const renderTaskItem = ({ item }) => (
-    <View key={item.id} style={styles.taskItem}>
+    <View style={styles.taskItem} key={item.id}>
       <View style={styles.taskContent}>
         <Text style={[styles.taskTitle, { fontSize: parseInt(fontSize) }]}>{item.title}</Text>
         <Text style={[styles.taskDescription, { fontSize: parseInt(fontSize) }]}>{item.description}</Text>
@@ -155,25 +177,38 @@ const TaskScreen = ({ route, navigation }) => {
       {showTaskForm && (
         <View style={styles.formContainer}>
           <Text style={styles.formTitle}>{editTaskId ? 'Edit Task' : 'Add Task'}</Text>
-          <TextInput
-            style={[styles.input, { fontSize: parseInt(fontSize) }]}
-            placeholder="Add title"
-            value={title}
-            onChangeText={setTitle}
-          />
-          <TextInput
-            style={[styles.input, { fontSize: parseInt(fontSize) }]}
-            placeholder="Add description"
-            value={description}
-            onChangeText={setDescription}
-          />
+          <View>
+            <TextInput
+              style={[styles.input, { borderColor: errors.title ? 'red' : 'gray', fontSize: parseInt(fontSize) }]}
+              placeholder="Add title"
+              value={title}
+              onChangeText={(text) => {
+                setTitle(text);
+                if (errors.title) setErrors({ ...errors, title: null });
+              }}
+            />
+            {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
+          </View>
+          <View>
+            <TextInput
+              style={[styles.input, { borderColor: errors.description ? 'red' : 'gray', fontSize: parseInt(fontSize) }]}
+              placeholder="Add description"
+              value={description}
+              onChangeText={(text) => {
+                setDescription(text);
+                if (errors.description) setErrors({ ...errors, description: null });
+              }}
+            />
+            {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
+          </View>
           <TouchableOpacity onPress={() => setShowDatePicker(true)}>
             <TextInput
-              style={[styles.input, { fontSize: parseInt(fontSize) }]}
+              style={[styles.input, { borderColor: errors.dueDate ? 'red' : 'gray', color: 'black', fontSize: parseInt(fontSize) }]}
               placeholder="Due Date"
               value={dueDate.toISOString().split('T')[0]}
               editable={false}
             />
+            {errors.dueDate && <Text style={styles.errorText}>{errors.dueDate}</Text>}
           </TouchableOpacity>
           {showDatePicker && (
             <DateTimePicker
@@ -183,7 +218,10 @@ const TaskScreen = ({ route, navigation }) => {
               onChange={handleDateChange}
             />
           )}
-          {renderTimePicker()}
+          <View>
+            {renderTimePicker()}
+            {errors.time && <Text style={styles.errorText}>{errors.time}</Text>}
+          </View>
           {editTaskId ? (
             <TouchableOpacity onPress={handleUpdateTask} style={styles.saveButton}>
               <Text style={styles.buttonText}>Update Task</Text>
@@ -195,13 +233,13 @@ const TaskScreen = ({ route, navigation }) => {
           )}
         </View>
       )}
-      <FlatList
-        data={tasks}
-        renderItem={renderTaskItem}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.taskList}
-        ListEmptyComponent={<Text style={styles.noTasksText}>You have no tasks to do :)</Text>}
-      />
+      <ScrollView contentContainerStyle={styles.taskList}>
+        {tasks.length > 0 ? (
+          tasks.map((task) => renderTaskItem({ item: task }))
+        ) : (
+          <Text style={styles.noTasksText}>You have No tasks to do :)</Text>
+        )}
+      </ScrollView>
     </View>
   );
 };
@@ -239,6 +277,11 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
     fontSize: 16,
     borderRadius: 4,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginBottom: 5,
   },
   saveButton: {
     backgroundColor: '#007BFF',
@@ -312,7 +355,7 @@ const styles = StyleSheet.create({
   },
   taskList: {
     padding: 15,
-    paddingBottom: 100,
+    paddingBottom: 100, // Adjust this value to fit the content above the navigation bar
   },
   noTasksText: {
     textAlign: 'center',

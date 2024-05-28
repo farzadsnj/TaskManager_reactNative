@@ -12,12 +12,12 @@ const ForgetPasswordScreen = ({ navigation }) => {
     }
 
     try {
-      await sendPasswordResetEmail(email);
-      Alert.alert('Success', 'Password reset email sent!');
-      navigation.navigate('Login');
+      const response = await sendPasswordResetEmail(email);
+      Alert.alert('Success', 'Email is valid. Proceed to reset password.');
+      navigation.navigate('ResetPassword', { token: response.token });
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'Failed to send password reset email');
+      Alert.alert('Error', 'Email not found');
     }
   };
 
@@ -33,7 +33,7 @@ const ForgetPasswordScreen = ({ navigation }) => {
           keyboardType="email-address"
           autoCapitalize="none"
         />
-        <Button title="Send Password Reset Email" onPress={handleSendEmail} />
+        <Button title="Proceed" onPress={handleSendEmail} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
