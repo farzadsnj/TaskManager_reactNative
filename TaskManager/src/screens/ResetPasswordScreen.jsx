@@ -1,35 +1,48 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
-import { resetPassword } from '../services/api';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  Alert,
+  StyleSheet,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+} from "react-native";
+import { resetPassword } from "../services/api";
 
 const ResetPasswordScreen = ({ route, navigation }) => {
   const { token } = route.params;
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleResetPassword = async () => {
     if (!password || !confirmPassword) {
-      Alert.alert('Error', 'Please enter both password fields!');
+      Alert.alert("Error", "Please enter both password fields!");
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match!');
+      Alert.alert("Error", "Passwords do not match!");
       return;
     }
 
     try {
       await resetPassword(token, password);
-      Alert.alert('Success', 'Password reset successfully!');
-      navigation.navigate('Login');
+      Alert.alert("Success", "Password reset successfully!");
+      navigation.navigate("Login");
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'Failed to reset password');
+      Alert.alert("Error", "Failed to reset password");
     }
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <Text style={styles.title}>Reset Password</Text>
         <TextInput
@@ -60,17 +73,17 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 20,
   },
   title: {
     fontSize: 24,
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   input: {
     height: 50,
-    borderColor: 'gray',
+    borderColor: "gray",
     borderWidth: 1,
     marginBottom: 20,
     paddingHorizontal: 10,

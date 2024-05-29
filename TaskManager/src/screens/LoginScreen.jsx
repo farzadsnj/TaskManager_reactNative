@@ -1,43 +1,64 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet, KeyboardAvoidingView, ScrollView, TouchableOpacity, Platform } from 'react-native';
-import { useFontSize } from '../contexts/FontSizeContext';
-import { loginUser } from '../services/api';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  Alert,
+  StyleSheet,
+  KeyboardAvoidingView,
+  ScrollView,
+  TouchableOpacity,
+  Platform,
+} from "react-native";
+import { useFontSize } from "../contexts/FontSizeContext";
+import { loginUser } from "../services/api";
 
 const LoginScreen = ({ navigation }) => {
   const { fontSize } = useFontSize();
-  const [identifier, setIdentifier] = useState(''); // Changed to identifier
-  const [password, setPassword] = useState('');
+  const [identifier, setIdentifier] = useState(""); 
+  const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
     if (!identifier || !password) {
-      Alert.alert('Error', 'Please enter both email/username and password!');
+      Alert.alert("Error", "Please enter both email/username and password!");
       return;
     }
 
     try {
       const data = await loginUser(identifier, password);
-      Alert.alert('Success', 'Logged in successfully');
-      navigation.navigate('Tasks', { token: data.token });
+      Alert.alert("Success", "Logged in successfully");
+      navigation.navigate("Tasks", { token: data.token });
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'Invalid email/username or password');
-      setPassword('');
+      Alert.alert("Error", "Invalid email/username or password");
+      setPassword("");
     }
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
       <ScrollView contentContainerStyle={styles.contentContainer}>
-        <Text style={[styles.welcomeTitle, { fontSize: parseInt(fontSize) }]}>Welcome to Task Manager</Text>
-        <Text style={[styles.description, { fontSize: parseInt(fontSize) * 0.8 }]}>
-          If you have an account, please sign in. If you don't have an account, sign up to get started.
+        <Text style={[styles.welcomeTitle, { fontSize: parseInt(fontSize) }]}>
+          Welcome to Task Manager
         </Text>
-        <Text style={[styles.title, { fontSize: parseInt(fontSize) }]}>Login</Text>
+        <Text
+          style={[styles.description, { fontSize: parseInt(fontSize) * 0.8 }]}
+        >
+          If you have an account, please sign in. If you don't have an account,
+          sign up to get started.
+        </Text>
+        <Text style={[styles.title, { fontSize: parseInt(fontSize) }]}>
+          Login
+        </Text>
         <TextInput
           style={styles.input}
-          placeholder="Email or Username" // Changed placeholder
-          value={identifier} // Changed to identifier
-          onChangeText={setIdentifier} // Changed to setIdentifier
+          placeholder="Email or Username" 
+          value={identifier} 
+          onChangeText={setIdentifier} 
           autoCapitalize="none"
         />
         <TextInput
@@ -48,14 +69,14 @@ const LoginScreen = ({ navigation }) => {
           onChangeText={setPassword}
           autoCapitalize="none"
         />
-        <TouchableOpacity onPress={() => navigation.navigate('ForgetPassword')}>
+        <TouchableOpacity onPress={() => navigation.navigate("ForgetPassword")}>
           <Text style={styles.forgotPassword}>Forgot password?</Text>
         </TouchableOpacity>
         <Button title="Login" onPress={handleLogin} />
         <View style={styles.buttonSpacing}>
           <Button
             title="Go to Sign Up"
-            onPress={() => navigation.navigate('SignUp')}
+            onPress={() => navigation.navigate("SignUp")}
             color="#1DA1F2"
           />
         </View>
@@ -70,37 +91,37 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 20,
   },
   welcomeTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
-    textAlign: 'center',
+    textAlign: "center",
   },
   description: {
     fontSize: 16,
     marginBottom: 20,
-    textAlign: 'center',
-    color: '#666',
+    textAlign: "center",
+    color: "#666",
   },
   title: {
     fontSize: 24,
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   input: {
     height: 50,
-    borderColor: 'gray',
+    borderColor: "gray",
     borderWidth: 1,
     marginBottom: 20,
     paddingHorizontal: 10,
     borderRadius: 5,
   },
   forgotPassword: {
-    color: '#1DA1F2',
-    textAlign: 'right',
+    color: "#1DA1F2",
+    textAlign: "right",
     marginBottom: 20,
   },
   buttonSpacing: {

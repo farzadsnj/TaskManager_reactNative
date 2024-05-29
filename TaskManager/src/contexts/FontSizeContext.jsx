@@ -1,15 +1,15 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useState, useContext, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const FontSizeContext = createContext();
 
 export const FontSizeProvider = ({ children }) => {
-  const [fontSize, setFontSize] = useState('16');
+  const [fontSize, setFontSize] = useState("16");
 
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const savedFontSize = await AsyncStorage.getItem('fontSize');
+        const savedFontSize = await AsyncStorage.getItem("fontSize");
         if (savedFontSize !== null) {
           setFontSize(savedFontSize);
         }
@@ -23,8 +23,8 @@ export const FontSizeProvider = ({ children }) => {
 
   const saveFontSize = async (size) => {
     try {
-      await AsyncStorage.setItem('fontSize', size);
-      setFontSize(size); // Update the state after saving asynchronously
+      await AsyncStorage.setItem("fontSize", size);
+      setFontSize(size);
     } catch (error) {
       console.error(error);
     }

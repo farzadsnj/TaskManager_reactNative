@@ -1,28 +1,41 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
-import { sendPasswordResetEmail } from '../services/api';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  Alert,
+  StyleSheet,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+} from "react-native";
+import { sendPasswordResetEmail } from "../services/api";
 
 const ForgetPasswordScreen = ({ navigation }) => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
 
   const handleSendEmail = async () => {
     if (!email) {
-      Alert.alert('Error', 'Please enter your email address!');
+      Alert.alert("Error", "Please enter your email address!");
       return;
     }
 
     try {
       const response = await sendPasswordResetEmail(email);
-      Alert.alert('Success', 'Email is valid. Proceed to reset password.');
-      navigation.navigate('ResetPassword', { token: response.token });
+      Alert.alert("Success", "Email is valid. Proceed to reset password.");
+      navigation.navigate("ResetPassword", { token: response.token });
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'Email not found');
+      Alert.alert("Error", "Email not found");
     }
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <Text style={styles.title}>Forgot Password</Text>
         <TextInput
@@ -45,17 +58,17 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 20,
   },
   title: {
     fontSize: 24,
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   input: {
     height: 50,
-    borderColor: 'gray',
+    borderColor: "gray",
     borderWidth: 1,
     marginBottom: 20,
     paddingHorizontal: 10,
