@@ -86,14 +86,15 @@ export const deleteTask = async (id, token) => {
   }
 };
 
-export const loginUser = async (email, password) => {
+export const loginUser = async (identifier, password) => {
   try {
-    const response = await api.post('/auth/login', { email, password });
+    const response = await api.post('/auth/login', { identifier, password }); // Pass identifier
     return handleResponse(response);
   } catch (error) {
     handleError(error);
   }
 };
+
 
 export const registerUser = async (username, email, password) => {
   try {

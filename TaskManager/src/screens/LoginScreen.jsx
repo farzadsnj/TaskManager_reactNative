@@ -5,22 +5,22 @@ import { loginUser } from '../services/api';
 
 const LoginScreen = ({ navigation }) => {
   const { fontSize } = useFontSize();
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState(''); // Changed to identifier
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please enter both email and password!');
+    if (!identifier || !password) {
+      Alert.alert('Error', 'Please enter both email/username and password!');
       return;
     }
 
     try {
-      const data = await loginUser(email, password);
+      const data = await loginUser(identifier, password);
       Alert.alert('Success', 'Logged in successfully');
       navigation.navigate('Tasks', { token: data.token });
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'Invalid email or password');
+      Alert.alert('Error', 'Invalid email/username or password');
       setPassword('');
     }
   };
@@ -35,10 +35,9 @@ const LoginScreen = ({ navigation }) => {
         <Text style={[styles.title, { fontSize: parseInt(fontSize) }]}>Login</Text>
         <TextInput
           style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
+          placeholder="Email or Username" // Changed placeholder
+          value={identifier} // Changed to identifier
+          onChangeText={setIdentifier} // Changed to setIdentifier
           autoCapitalize="none"
         />
         <TextInput

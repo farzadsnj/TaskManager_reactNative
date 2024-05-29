@@ -16,18 +16,31 @@ exports.register = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
+  const { identifier, password } = req.body;
   try {
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({
+      where: {
+        [Op.or]: [
+          { email: identifier },
+          { username: identifier }
+        ]
+      }
+    });
+
     if (!user || !await bcrypt.compare(password, user.password)) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid email/username or password' });
     }
+
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.json({ token });
   } catch (error) {
+    console.error('Login error:', error); // More detailed logging
     res.status(500).json({ error: 'Failed to login' });
   }
 };
+
+
+
 
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;

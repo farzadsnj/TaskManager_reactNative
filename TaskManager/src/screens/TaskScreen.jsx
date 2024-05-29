@@ -6,11 +6,14 @@ import { useFontSize } from '../contexts/FontSizeContext';
 import { getTasks, createTask, updateTask, deleteTask } from '../services/api';
 import { Picker } from '@react-native-picker/picker';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import CalendarPicker from 'react-native-calendar-picker';
+import { format } from 'date-fns';
 
 const TaskScreen = ({ route, navigation }) => {
   const tailwind = useTailwind();
   const { fontSize } = useFontSize();
   const [tasks, setTasks] = useState([]);
+  const [completedTasks, setCompletedTasks] = useState([]); // State for completed/deleted tasks
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState(new Date());
@@ -18,7 +21,9 @@ const TaskScreen = ({ route, navigation }) => {
   const [time, setTime] = useState('00:00');
   const [editTaskId, setEditTaskId] = useState(null);
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(true);
   const [errors, setErrors] = useState({});
+  const [showUpcomingTask, setShowUpcomingTask] = useState(true);
   const { token } = route.params;
 
   useEffect(() => {
@@ -55,9 +60,10 @@ const TaskScreen = ({ route, navigation }) => {
       setDueDate(new Date());
       setTime('00:00');
       setErrors({});
-      Alert.alert('Task created successfully');
+      Alert.alert('Success', 'Task created successfully');
     } catch (error) {
       console.error(error);
+      Alert.alert('Error', 'Failed to create task');
     }
   };
 
@@ -93,27 +99,49 @@ const TaskScreen = ({ route, navigation }) => {
       setTime('00:00');
       setErrors({});
       setShowTaskForm(false);
-      Alert.alert('Task updated successfully');
+      Alert.alert('Success', 'Task updated successfully');
     } catch (error) {
       console.error(error);
+      Alert.alert('Error', 'Failed to update task');
     }
   };
 
   const handleCompleteTask = async (id) => {
     try {
-      await updateTask(id, { status: 'Completed' }, token);
-      setTasks(tasks.map(task => (task.id === id ? { ...task, status: 'Completed' } : task)));
+      const taskToComplete = tasks.find(task => task.id === id);
+      await updateTask(id, { ...taskToComplete, status: 'Completed' }, token);
+      setTasks(tasks.filter(task => task.id !== id));
+      setCompletedTasks([...completedTasks, { ...taskToComplete, status: 'Completed' }]);
+      Alert.alert('Success', 'Task marked as completed');
     } catch (error) {
       console.error(error);
+      Alert.alert('Error', 'Failed to mark task as completed');
     }
   };
 
   const handleDeleteTask = async (id) => {
     try {
+      const taskToDelete = tasks.find(task => task.id === id);
       await deleteTask(id, token);
       setTasks(tasks.filter(task => task.id !== id));
+      setCompletedTasks([...completedTasks, { ...taskToDelete, status: 'Deleted' }]);
+      Alert.alert('Success', 'Task deleted successfully');
     } catch (error) {
       console.error(error);
+      Alert.alert('Error', 'Failed to delete task');
+    }
+  };
+
+  const handleRestoreTask = async (id) => {
+    try {
+      const taskToRestore = completedTasks.find(task => task.id === id);
+      await updateTask(id, { ...taskToRestore, status: 'Pending' }, token);
+      setCompletedTasks(completedTasks.filter(task => task.id !== id));
+      setTasks([...tasks, { ...taskToRestore, status: 'Pending' }]);
+      Alert.alert('Success', 'Task restored successfully');
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Failed to restore task');
     }
   };
 
@@ -121,6 +149,10 @@ const TaskScreen = ({ route, navigation }) => {
     const currentDate = selectedDate || dueDate;
     setShowDatePicker(Platform.OS === 'ios');
     setDueDate(currentDate);
+  };
+
+  const handleCalendarDateChange = (date) => {
+    setDueDate(date);
   };
 
   const renderTimePicker = () => {
@@ -142,115 +174,236 @@ const TaskScreen = ({ route, navigation }) => {
     );
   };
 
-  const renderTaskItem = ({ item }) => (
-    <View style={styles.taskItem} key={item.id}>
-      <View style={styles.taskContent}>
-        <Text style={[styles.taskTitle, { fontSize: parseInt(fontSize) }]}>{item.title}</Text>
-        <Text style={[styles.taskDescription, { fontSize: parseInt(fontSize) }]}>{item.description}</Text>
-        <Text style={[styles.taskLabel, { fontSize: parseInt(fontSize) }]}>Date: <Text style={styles.taskDueDate}>{item.dueDate.split('T')[0]}</Text></Text>
-        <Text style={[styles.taskLabel, { fontSize: parseInt(fontSize) }]}>Time: <Text style={styles.taskDueTime}>{item.dueDate.split(' ')[1]}</Text></Text>
-      </View>
-      <View style={styles.taskActions}>
-        <TouchableOpacity onPress={() => handleCompleteTask(item.id)} style={[styles.taskButton, styles.doneButton]}>
-          <Ionicons name="checkmark-circle-outline" size={20} color="white" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleDeleteTask(item.id)} style={[styles.taskButton, styles.deleteButton]}>
-          <Ionicons name="trash-outline" size={20} color="white" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleEditTask(item)} style={[styles.taskButton, styles.editButton]}>
-          <Ionicons name="pencil-outline" size={20} color="black" />
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+  const renderTaskItem = ({ item }) => {
+    const formattedDueDate = format(new Date(item.dueDate), 'yyyy-MM-dd HH:mm');
 
-  return (
-    <View style={tailwind('flex-1 bg-gray-100')}>
-      <View style={styles.header}>
-        <Text style={[tailwind('text-4xl font-bold text-center'), { fontSize: parseInt(fontSize) }]}>
-          Task Manager
-        </Text>
-      </View>
-      <TouchableOpacity onPress={() => setShowTaskForm(!showTaskForm)} style={styles.toggleButton}>
-        <Text style={styles.toggleButtonText}>{showTaskForm ? 'Hide Task Form' : 'Add Task'}</Text>
-      </TouchableOpacity>
-      {showTaskForm && (
-        <View style={styles.formContainer}>
-          <Text style={styles.formTitle}>{editTaskId ? 'Edit Task' : 'Add Task'}</Text>
-          <View>
-            <TextInput
-              style={[styles.input, { borderColor: errors.title ? 'red' : 'gray', fontSize: parseInt(fontSize) }]}
-              placeholder="Add title"
-              value={title}
-              onChangeText={(text) => {
-                setTitle(text);
-                if (errors.title) setErrors({ ...errors, title: null });
-              }}
-            />
-            {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
-          </View>
-          <View>
-            <TextInput
-              style={[styles.input, { borderColor: errors.description ? 'red' : 'gray', fontSize: parseInt(fontSize) }]}
-              placeholder="Add description"
-              value={description}
-              onChangeText={(text) => {
-                setDescription(text);
-                if (errors.description) setErrors({ ...errors, description: null });
-              }}
-            />
-            {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
-          </View>
-          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-            <TextInput
-              style={[styles.input, { borderColor: errors.dueDate ? 'red' : 'gray', color: 'black', fontSize: parseInt(fontSize) }]}
-              placeholder="Due Date"
-              value={dueDate.toISOString().split('T')[0]}
-              editable={false}
-            />
-            {errors.dueDate && <Text style={styles.errorText}>{errors.dueDate}</Text>}
+    return (
+      <View style={styles.taskItem} key={item.id}>
+        <View style={styles.taskContent}>
+          <Text style={[styles.taskTitle, { fontSize: parseInt(fontSize) }]}>{item.title}</Text>
+          <Text style={[styles.taskDescription, { fontSize: parseInt(fontSize) }]}>{item.description}</Text>
+          <Text style={[styles.taskLabel, { fontSize: parseInt(fontSize) }]}>Date: <Text style={styles.taskDueDate}>{formattedDueDate.split(' ')[0]}</Text></Text>
+          <Text style={[styles.taskLabel, { fontSize: parseInt(fontSize) }]}>Time: <Text style={styles.taskDueTime}>{formattedDueDate.split(' ')[1]}</Text></Text>
+        </View>
+        <View style={styles.taskActions}>
+          <TouchableOpacity onPress={() => handleCompleteTask(item.id)} style={[styles.taskButton, styles.doneButton]}>
+            <Ionicons name="checkmark-circle-outline" size={20} color="white" />
           </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              value={dueDate}
-              mode="date"
-              display="default"
-              onChange={handleDateChange}
-            />
-          )}
-          <View>
-            {renderTimePicker()}
-            {errors.time && <Text style={styles.errorText}>{errors.time}</Text>}
-          </View>
-          {editTaskId ? (
-            <TouchableOpacity onPress={handleUpdateTask} style={styles.saveButton}>
-              <Text style={styles.buttonText}>Update Task</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={handleCreateTask} style={styles.saveButton}>
-              <Text style={styles.buttonText}>Save</Text>
+          <TouchableOpacity onPress={() => handleDeleteTask(item.id)} style={[styles.taskButton, styles.deleteButton]}>
+            <Ionicons name="trash-outline" size={20} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleEditTask(item)} style={[styles.taskButton, styles.editButton]}>
+            <Ionicons name="pencil-outline" size={20} color="black" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
+  const renderCompletedTaskItem = ({ item }) => {
+    const formattedDueDate = format(new Date(item.dueDate), 'yyyy-MM-dd HH:mm');
+    const isRestorable = new Date(item.dueDate) > new Date();
+
+    return (
+      <View style={styles.taskItem} key={item.id}>
+        <View style={styles.taskContent}>
+          <Text style={[styles.taskTitle, { fontSize: parseInt(fontSize) }]}>{item.title}</Text>
+          <Text style={[styles.taskDescription, { fontSize: parseInt(fontSize) }]}>{item.description}</Text>
+          <Text style={[styles.taskLabel, { fontSize: parseInt(fontSize) }]}>Date: <Text style={styles.taskDueDate}>{formattedDueDate.split(' ')[0]}</Text></Text>
+          <Text style={[styles.taskLabel, { fontSize: parseInt(fontSize) }]}>Time: <Text style={styles.taskDueTime}>{formattedDueDate.split(' ')[1]}</Text></Text>
+        </View>
+        <View style={styles.taskActions}>
+          {isRestorable && (
+            <TouchableOpacity onPress={() => handleRestoreTask(item.id)} style={[styles.taskButton, styles.restoreButton]}>
+              <Ionicons name="refresh-outline" size={20} color="white" />
             </TouchableOpacity>
           )}
         </View>
-      )}
-      <ScrollView contentContainerStyle={styles.taskList}>
-        {tasks.length > 0 ? (
-          tasks.map((task) => renderTaskItem({ item: task }))
-        ) : (
-          <Text style={styles.noTasksText}>You have No tasks to do :)</Text>
+      </View>
+    );
+  };
+
+  const renderNextUpcomingTask = () => {
+    if (!showUpcomingTask) return null;
+
+    const nextTask = tasks.reduce((closest, task) => {
+      const taskDueDate = new Date(task.dueDate);
+      return (!closest || taskDueDate < new Date(closest.dueDate)) ? task : closest;
+    }, null);
+
+    if (!nextTask) return null;
+
+    return (
+      <View style={styles.upcomingTaskContainer}>
+        <View style={styles.upcomingTaskHeader}>
+          <Text style={styles.upcomingTaskTitle}>Next Upcoming Task</Text>
+          <TouchableOpacity onPress={() => setShowUpcomingTask(false)}>
+            <Ionicons name="close-outline" size={20} color="black" />
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.upcomingTaskText}>{nextTask.title}</Text>
+        <Text style={styles.upcomingTaskText}>{format(new Date(nextTask.dueDate), 'yyyy-MM-dd')}</Text>
+      </View>
+    );
+  };
+
+  return (
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={tailwind('flex-1 bg-gray-100')}>
+        <View style={styles.header}>
+          <Text style={[tailwind('text-4xl font-bold text-center'), { fontSize: parseInt(fontSize) }]}>
+            Task Manager
+          </Text>
+        </View>
+        {showCalendar && (
+          <View style={styles.calendarContainer}>
+            <Text style={[styles.calendarTitle, { fontSize: parseInt(fontSize) }]}>Calendar</Text>
+            <CalendarPicker
+              onDateChange={handleCalendarDateChange}
+              selectedStartDate={dueDate}
+              todayBackgroundColor="#e6ffe6"
+              selectedDayColor="#66ff66"
+              selectedDayTextColor="#000000"
+            />
+            <TouchableOpacity onPress={() => setShowCalendar(false)} style={styles.closeCalendarButton}>
+              <Text style={styles.closeCalendarButtonText}>Close Calendar</Text>
+            </TouchableOpacity>
+          </View>
         )}
-      </ScrollView>
-    </View>
+        {!showCalendar && (
+          <TouchableOpacity onPress={() => setShowCalendar(true)} style={styles.openCalendarButton}>
+            <Text style={styles.openCalendarButtonText}>Open Calendar</Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity onPress={() => setShowTaskForm(!showTaskForm)} style={styles.toggleButton}>
+          <Text style={styles.toggleButtonText}>{showTaskForm ? 'Hide Task Form' : 'Add Task'}</Text>
+        </TouchableOpacity>
+        {renderNextUpcomingTask()}
+        {showTaskForm && (
+          <View style={styles.formContainer}>
+            <Text style={styles.formTitle}>{editTaskId ? 'Edit Task' : 'Add Task'}</Text>
+            <View>
+              <TextInput
+                style={[styles.input, { borderColor: errors.title ? 'red' : 'gray', fontSize: parseInt(fontSize) }]}
+                placeholder="Add title"
+                value={title}
+                onChangeText={(text) => {
+                  setTitle(text);
+                  if (errors.title) setErrors({ ...errors, title: null });
+                }}
+              />
+              {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
+            </View>
+            <View>
+              <TextInput
+                style={[styles.input, { borderColor: errors.description ? 'red' : 'gray', fontSize: parseInt(fontSize) }]}
+                placeholder="Add description"
+                value={description}
+                onChangeText={(text) => {
+                  setDescription(text);
+                  if (errors.description) setErrors({ ...errors, description: null });
+                }}
+              />
+              {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
+            </View>
+            <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+              <TextInput
+                style={[styles.input, { borderColor: errors.dueDate ? 'red' : 'gray', color: 'black', fontSize: parseInt(fontSize) }]}
+                placeholder="Due Date"
+                value={dueDate.toISOString().split('T')[0]}
+                editable={false}
+              />
+              {errors.dueDate && <Text style={styles.errorText}>{errors.dueDate}</Text>}
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={dueDate}
+                mode="date"
+                display="default"
+                onChange={handleDateChange}
+              />
+            )}
+            <View>
+              {renderTimePicker()}
+              {errors.time && <Text style={styles.errorText}>{errors.time}</Text>}
+            </View>
+            {editTaskId ? (
+              <TouchableOpacity onPress={handleUpdateTask} style={styles.saveButton}>
+                <Text style={styles.buttonText}>Update Task</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity onPress={handleCreateTask} style={styles.saveButton}>
+                <Text style={styles.buttonText}>Save</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+        <View style={styles.taskListContainer}>
+          {tasks.length > 0 ? (
+            tasks.map((task) => renderTaskItem({ item: task }))
+          ) : (
+            <Text style={styles.noTasksText}>You have No tasks to do :)</Text>
+          )}
+        </View>
+        {completedTasks.length > 0 && (
+          <View style={styles.completedTasksContainer}>
+            <Text style={styles.sectionTitle}>Completed/Deleted Tasks</Text>
+            {completedTasks.map((task) => renderCompletedTaskItem({ item: task }))}
+          </View>
+        )}
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+  },
   header: {
     padding: 15,
     backgroundColor: '#f8f8f8',
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
     textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  calendarContainer: {
+    padding: 15,
+    backgroundColor: '#fff',
+    margin: 10,
+    borderRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  calendarTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  closeCalendarButton: {
+    backgroundColor: '#007BFF',
+    padding: 10,
+    borderRadius: 4,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  closeCalendarButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  openCalendarButton: {
+    backgroundColor: '#007BFF',
+    padding: 10,
+    borderRadius: 4,
+    alignItems: 'center',
+    margin: 10,
+  },
+  openCalendarButtonText: {
+    color: 'white',
     fontWeight: 'bold',
   },
   formContainer: {
@@ -292,6 +445,10 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
+  },
+  taskListContainer: {
+    padding: 15,
+    paddingBottom: 100,
   },
   taskItem: {
     backgroundColor: '#FFF',
@@ -342,6 +499,9 @@ const styles = StyleSheet.create({
   editButton: {
     backgroundColor: '#FFC107',
   },
+  restoreButton: {
+    backgroundColor: '#007BFF',
+  },
   toggleButton: {
     backgroundColor: '#007BFF',
     padding: 10,
@@ -353,15 +513,51 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
-  taskList: {
-    padding: 15,
-    paddingBottom: 100, // Adjust this value to fit the content above the navigation bar
-  },
   noTasksText: {
     textAlign: 'center',
     fontSize: 18,
     color: '#888',
     marginTop: 20,
+  },
+  upcomingTaskContainer: {
+    padding: 15,
+    margin: 10,
+    borderRadius: 5,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  upcomingTaskHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  upcomingTaskTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  upcomingTaskText: {
+    fontSize: 16,
+    marginTop: 5,
+  },
+  completedTasksContainer: {
+    padding: 15,
+    margin: 10,
+    borderRadius: 5,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
   },
 });
 
