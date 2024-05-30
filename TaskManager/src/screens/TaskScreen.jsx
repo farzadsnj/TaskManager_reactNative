@@ -173,19 +173,6 @@ const TaskScreen = ({ route, navigation }) => {
     }
   };
 
-  const handleRestoreTask = async (id) => {
-    try {
-      const taskToRestore = completedTasks.find((task) => task.id === id);
-      await updateTask(id, { ...taskToRestore, status: "Pending" }, token);
-      setCompletedTasks(completedTasks.filter((task) => task.id !== id));
-      setTasks([...tasks, { ...taskToRestore, status: "Pending" }]);
-      Alert.alert("Success", "Task restored successfully");
-    } catch (error) {
-      console.error(error);
-      Alert.alert("Error", "Failed to restore task");
-    }
-  };
-
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || dueDate;
     setShowDatePicker(Platform.OS === "ios");
@@ -268,7 +255,6 @@ const TaskScreen = ({ route, navigation }) => {
 
   const renderCompletedTaskItem = ({ item }) => {
     const formattedDueDate = format(new Date(item.dueDate), "yyyy-MM-dd HH:mm");
-    const isRestorable = new Date(item.dueDate) > new Date();
 
     return (
       <View style={styles.taskItem} key={item.id}>
@@ -293,16 +279,6 @@ const TaskScreen = ({ route, navigation }) => {
               {formattedDueDate.split(" ")[1]}
             </Text>
           </Text>
-        </View>
-        <View style={styles.taskActions}>
-          {isRestorable && (
-            <TouchableOpacity
-              onPress={() => handleRestoreTask(item.id)}
-              style={[styles.taskButton, styles.restoreButton]}
-            >
-              <Ionicons name="refresh-outline" size={20} color="white" />
-            </TouchableOpacity>
-          )}
         </View>
       </View>
     );
@@ -652,9 +628,6 @@ const styles = StyleSheet.create({
   },
   editButton: {
     backgroundColor: "#FFC107",
-  },
-  restoreButton: {
-    backgroundColor: "#007BFF",
   },
   toggleButton: {
     backgroundColor: "#007BFF",
