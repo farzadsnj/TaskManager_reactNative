@@ -10,8 +10,10 @@ import ForgetPasswordScreen from "../../src/screens/ForgetPasswordScreen";
 import ResetPasswordScreen from "../../src/screens/ResetPasswordScreen";
 import { FontSizeProvider } from "../../src/contexts/FontSizeContext";
 import ErrorBoundary from "../../src/contexts/ErrorBoundary";
+import { LogBox } from 'react-native';
 
 const Stack = createNativeStackNavigator();
+LogBox.ignoreLogs(['ERROR: Day: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.']);
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);

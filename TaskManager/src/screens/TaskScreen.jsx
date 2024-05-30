@@ -517,7 +517,11 @@ const styles = StyleSheet.create({
     borderBottomColor: "#ddd",
     textAlign: "center",
     fontWeight: "bold",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
+
   calendarContainer: {
     padding: 15,
     backgroundColor: "#fff",
